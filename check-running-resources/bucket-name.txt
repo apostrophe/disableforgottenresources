@@ -1,1 +1,1 @@
-lambda-blank-java-artifacts
+check-running-resources-java-artifacts

@@ -5,7 +5,7 @@ Resources:
   function:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://lambda-blank-java-artifacts/de5398c8da556a749d818b478edb4db6
+      CodeUri: s3://check-running-resources-java-artifacts/c991823fd3d58eee82bd29f6a686b72d
       Handler: example.Handler::handleRequest
       Runtime: java8
       Description: Java function
@@ -17,13 +17,3 @@ Resources:
       - AWSXrayWriteOnlyAccess
       - AWSLambdaVPCAccessExecutionRole
       Tracing: Active
-      Layers:
-      - Ref: libs
-  libs:
-    Type: AWS::Serverless::LayerVersion
-    Properties:
-      LayerName: blank-java-lib
-      Description: Dependencies for the blank-java sample app.
-      ContentUri: s3://lambda-blank-java-artifacts/362c4f20694637bb2265e5aed0bd436a
-      CompatibleRuntimes:
-      - java8
