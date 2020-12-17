@@ -5,7 +5,7 @@ Resources:
   function:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: build/distributions/blank-java.zip
+      CodeUri: build/distributions/disable-running-resources.zip
       Handler: example.Handler::handleRequest
       Runtime: java8
       Description: Java function
@@ -23,8 +23,8 @@ Resources:
   libs:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      LayerName: blank-java-lib
-      Description: Dependencies for the blank-java sample app.
-      ContentUri: build/blank-java-lib.zip
+      LayerName: disable-running-resources-lib
+      Description: Dependencies for the disable-running-resources app.
+      ContentUri: build/disable-running-resources-lib.zip
       CompatibleRuntimes:
         - java8

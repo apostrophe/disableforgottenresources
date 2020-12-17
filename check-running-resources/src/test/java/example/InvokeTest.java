@@ -43,7 +43,7 @@ class InvokeTest {
 
   @Test
   void invokeTest() {
-    AWSXRay.beginSegment("blank-java-test");
+    AWSXRay.beginSegment("disable-running-resources-test");
     String path = "src/test/resources/event.json";
     String eventString = loadJsonFile(path);
     SQSEvent event = gson.fromJson(eventString, SQSEvent.class);

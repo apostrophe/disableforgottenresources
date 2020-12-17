@@ -1,6 +1,6 @@
 #!/bin/bash
 set -eo pipefail
-STACK=blank-java
+STACK=disable-running-resources
 if [[ $# -eq 1 ]] ; then
     STACK=$1
     echo "Deleting stack $STACK"
@@ -11,7 +11,7 @@ echo "Deleted $STACK stack."
 
 if [ -f bucket-name.txt ]; then
     ARTIFACT_BUCKET=$(cat bucket-name.txt)
-    if [[ ! $ARTIFACT_BUCKET =~ lambda-blank-java-artifacts ]] ; then
+    if [[ ! $ARTIFACT_BUCKET =~ disable-running-resources--java-artifacts ]] ; then
         echo "Bucket was not created by this application. Skipping."
     else
         while true; do

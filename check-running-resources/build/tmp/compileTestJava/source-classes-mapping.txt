@@ -1,9 +1,0 @@
-example/TestContext.java
- example.TestContext
-example/TestLogger.java
- example.TestLogger
-example/SQSEventDeserializer.java
- example.SQSEventDeserializer
- example.SQSEventDeserializer$1
-example/InvokeTest.java
- example.InvokeTest

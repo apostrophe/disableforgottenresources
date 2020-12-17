@@ -1,1 +1,1 @@
-check-running-resources-java-artifacts
+disable-running-resources--java-artifacts
