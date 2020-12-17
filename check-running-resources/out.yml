@@ -5,7 +5,7 @@ Resources:
   function:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://disable-running-resources--java-artifacts/81ff3310aa2c8156ee5b91bf5e1e751a
+      CodeUri: s3://disable-running-resources--java-artifacts/e8928ec8a3810a8483a081c703078697
       Handler: example.Handler::handleRequest
       Runtime: java8
       Description: Java function
@@ -16,4 +16,5 @@ Resources:
       - AWSLambdaReadOnlyAccess
       - AWSXrayWriteOnlyAccess
       - AWSLambdaVPCAccessExecutionRole
+      - AmazonEC2FullAccess
       Tracing: Active
