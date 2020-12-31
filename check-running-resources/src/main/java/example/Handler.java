@@ -107,7 +107,7 @@ public class Handler implements RequestHandler<SQSEvent, String>{
     				List<Tag> tags = instance.getTags();
     				for (Tag t : tags) {
     					context.getLogger().log("instance.getState().getName()"+instance.getState().getName());
-    					if (t.getKey().contains("disable-candidate") && instance.getState().getName().equalsIgnoreCase("running")) {
+    					if (instance.getState().getName().equalsIgnoreCase("running")) {
     						StopInstancesRequest stopRequest = new StopInstancesRequest().withInstanceIds(instance.getInstanceId());
     						ec2.stopInstances(stopRequest);
     						

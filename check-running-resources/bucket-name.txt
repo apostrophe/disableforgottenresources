@@ -1,1 +1,0 @@
-disable-running-resources--java-artifacts

@@ -1,9 +1,0 @@
-
-add rule to cf template
-add SNS notification when shutting down
-refactor
-remove calls to account name, etc
-update unit tests
-
-place in code commit?
-

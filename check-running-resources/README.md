@@ -1,3 +1,27 @@
+
+### To Run ###
+- run the below on command line:
+````bash
+./1-create-bucket.sh  
+./2-build-layer.sh  
+./3-deploy.sh  
+./4-invoke.sh	
+./5-cleanup.sh
+````
+### To Do ###
+- parameterized name in cloudwatch rule
+- add SNS notification when shutting down
+    - add parameter to lambda function
+- refactor java
+- remove calls to account name, etc
+- update unit tests
+- place in code commit?
+
+### Completed ###
+- add rule to cf template 
+
+
+
 # Blank function (Java)
 
 ![Architecture](/sample-apps/blank-java/images/sample-blank-java.png)
