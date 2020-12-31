@@ -6,7 +6,7 @@ Description: An AWS Lambda application that calls the Lambda API.
 #     Type: String
 #     Description: Provide the ARN of the Lambda Function the CloudWatch Rule will create
 Resources:
-  lambdaFunction:
+  LambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: target/disable-running-resources-1.0-SNAPSHOT.jar
@@ -23,33 +23,43 @@ Resources:
         - AWSLambdaVPCAccessExecutionRole
         - AmazonEC2FullAccess
       Tracing: Active
-  scheduledLambdaFunction:
+  ScheduledRule:
     Type: AWS::Events::Rule
     Properties: 
       Description: To fire off the disable-running-resources lambda function
-      # EventBusName: String
-      # EventPattern: Json
       Name: disable-running-resources-lambda-schedule
-      # RoleArn: String
       ScheduleExpression: cron(0 8 * * ? *)
+      # ScheduleExpression: rate(1 minute)
       State: ENABLED
       Targets: 
         - Arn: 
-            !GetAtt lambdaFunction.Arn
+            !GetAtt LambdaFunction.Arn
           Id: 1
           RetryPolicy:
             MaximumRetryAttempts: 4
             MaximumEventAgeInSeconds: 400
-  # scheduled-notification:
+  PermissionForEventsToInvokeLambda: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !Ref "LambdaFunction"
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      # SourceArn: 
+      #   Fn::GetAtt: 
+      #     - "ScheduledRule"
+      #     - "Arn"            
+  # scheduledNotification:
   #   Type: AWS::Events::Rule
   #   Properties: 
   #     Description: Reminder that instances will be stopped
-  #     Name: disable-running-resources-lambda-schedule
-  #     ScheduleExpression: cron(0 3 * * ? *)
+  #     Name: disable-running-resources-notification-schedule
+  #     # ScheduleExpression: cron(0 3 * * ? *)
+  #     ScheduleExpression: rate(5 minutes)
   #     State: ENABLED
   #     Targets: 
-  #       - Arn: 'arn:aws:lambda:us-east-1:297211837959:function:disable-running-resources-function-1TEXV8O88VEGK'
-  #         Id: 1
+  #       - Arn: 
+  #           !GetAtt LambdaFunction.Arn
+  #         Id: 2
   #         RetryPolicy:
   #           MaximumRetryAttempts: 4
   #           MaximumEventAgeInSeconds: 400

@@ -54,25 +54,27 @@ public class Handler implements RequestHandler<SQSEvent, String>{
 
 		String response = new String();
 		// call Lambda API
-//		logger.info("Getting account settings");
-//		CompletableFuture<GetAccountSettingsResponse> accountSettings = 
-//				lambdaClient.getAccountSettings(GetAccountSettingsRequest.builder().build());
-//		// log execution details
-//		logger.info("ENVIRONMENT VARIABLES: {}", gson.toJson(System.getenv()));
-//		logger.info("CONTEXT: {}", gson.toJson(context));
-//		logger.info("EVENT: {}", gson.toJson(event));
-//		// process event
-//		for(SQSMessage msg : event.getRecords()){
-//			logger.info("~"+msg.getBody());
+		logger.info("Getting account settings");
+		CompletableFuture<GetAccountSettingsResponse> accountSettings = 
+				lambdaClient.getAccountSettings(GetAccountSettingsRequest.builder().build());
+		// log execution details
+		logger.info("ENVIRONMENT VARIABLES: {}", gson.toJson(System.getenv()));
+		logger.info("CONTEXT: {}", gson.toJson(context));
+		logger.info("EVENT: {}", gson.toJson(event));
+		// process event
+//		if (event != null) {
+//			for(SQSMessage msg : event.getRecords()){
+//				logger.info("~"+msg.getBody());
+//			}
 //		}
-//		// process Lambda API response
-//		try {
-//			GetAccountSettingsResponse settings = accountSettings.get();
-//			response = gson.toJson(settings.accountUsage());
-//			logger.info("Account usage: {}", response);
-//		} catch(Exception e) {
-//			e.getStackTrace();
-//		}
+		// process Lambda API response
+		try {
+			GetAccountSettingsResponse settings = accountSettings.get();
+			response = gson.toJson(settings.accountUsage());
+			logger.info("Account usage: {}", response);
+		} catch(Exception e) {
+			e.getStackTrace();
+		}
 		return response;
 	}
 	

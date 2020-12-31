@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: An AWS Lambda application that calls the Lambda API.
+Resources:
+  LambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://disable-running-resources--java-artifacts/61559895acdc61a028f45201313a81c3
+      Handler: example.Handler::handleRequest
+      Runtime: java8
+      Description: Java function
+      MemorySize: 512
+      Timeout: 10
+      Policies:
+      - AWSLambdaBasicExecutionRole
+      - AWSLambdaReadOnlyAccess
+      - AWSXrayWriteOnlyAccess
+      - AWSLambdaVPCAccessExecutionRole
+      - AmazonEC2FullAccess
+      Tracing: Active
+  ScheduledRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: To fire off the disable-running-resources lambda function
+      Name: disable-running-resources-lambda-schedule
+      ScheduleExpression: cron(0 8 * * ? *)
+      State: ENABLED
+      Targets:
+      - Arn:
+          Fn::GetAtt:
+          - LambdaFunction
+          - Arn
+        Id: 1
+        RetryPolicy:
+          MaximumRetryAttempts: 4
+          MaximumEventAgeInSeconds: 400
+  PermissionForEventsToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Ref: LambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
