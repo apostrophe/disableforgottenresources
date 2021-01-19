@@ -51,4 +51,8 @@ gradle-app.setting
 # End of https://www.toptal.com/developers/gitignore/api/java,mvn,gradle
 
 bucket-name.txt
+aws-sample-java-apps
 
+#eclipse
+.classpath
+.project

@@ -94,6 +94,9 @@ public class Handler implements RequestHandler<SQSEvent, String>{
 
     		for(Reservation reservation : response.getReservations()) {
     			for(Instance instance : reservation.getInstances()) {
+
+					boolean instanceWithMatchingTagFound = false;
+
     				context.getLogger().log(String.format(
     						"Instance %s, " + 
     						"AMI: %s, " + 
@@ -104,20 +107,43 @@ public class Handler implements RequestHandler<SQSEvent, String>{
     						instance.getInstanceType(),
     						instance.getState()
     						));
-    				
-//    				context.getLogger().log("getting tags...");
+
+				final String EC2_MARKER_TAG = System.getenv("STOP_EC2_INSTANCES_TAG_NAME");
+				context.getLogger().log("*** STOP_EC2_INSTANCES_TAG_NAME " + EC2_MARKER_TAG + " ***");
+
+				if (EC2_MARKER_TAG == null || EC2_MARKER_TAG.trim().isEmpty()) {
+					context.getLogger().log("*** STOP_EC2_INSTANCES_TAG_NAME IS EMPTY ***");
+
+					StopInstancesRequest stopRequest = new StopInstancesRequest().withInstanceIds(instance.getInstanceId());
+					ec2.stopInstances(stopRequest);
+
+					context.getLogger().log("*** request made to STOP instance " + instance.getInstanceId() + " ***");
+				}
+				else {
+					context.getLogger().log("*** STOP_EC2_INSTANCES_TAG_NAME IS NOT EMPTY: "+EC2_MARKER_TAG+" ***");
+
+					context.getLogger().log("instance.getState().getName()"+instance.getState().getName());
+
     				List<Tag> tags = instance.getTags();
-    				for (Tag t : tags) {
-    					context.getLogger().log("instance.getState().getName()"+instance.getState().getName());
-    					if (instance.getState().getName().equalsIgnoreCase("running")) {
-    						StopInstancesRequest stopRequest = new StopInstancesRequest().withInstanceIds(instance.getInstanceId());
+    				for (Tag tag : tags) {
+						if (tag.getKey().equalsIgnoreCase(EC2_MARKER_TAG) && instance.getState().getName().equalsIgnoreCase("running")) {
+							context.getLogger().log("*** EC2 TAG FOUND:  "+tag.getKey()+" ***");
+    	
+							StopInstancesRequest stopRequest = new StopInstancesRequest().withInstanceIds(instance.getInstanceId());
     						ec2.stopInstances(stopRequest);
     						
     						context.getLogger().log("*** request made to STOP instance " + instance.getInstanceId() + " ***");
+							instanceWithMatchingTagFound = true;
+
     						// add SNS notification
-    					}
+						}
     				}
+
+					if (!instanceWithMatchingTagFound)
+						context.getLogger().log("*** No tags found matching " + EC2_MARKER_TAG + " on instance id " + instance.getInstanceId() + " ***");
     			}
+				}
+
     		}
     		
     		request.setNextToken(response.getNextToken());

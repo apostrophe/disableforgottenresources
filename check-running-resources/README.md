@@ -1,5 +1,20 @@
+## Disable EC2 Instances ##
+This project creates a scheduled event via a CloudWatch Rule and a lambda function via a SAM-based CloudFormation template.
 
-### To Run ###
+The Rule is scheduled to call a lambda function every night at 3AM EST to check for any running EC2 instances.
+
+`template-mvn.yml:`
+````json
+  ScheduledRule:
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: To fire off the disable-running-resources lambda function
+      Name: disable-running-resources-lambda-schedule
+      ScheduleExpression: cron(0 8 * * ? *)
+````
+The lambda function will only stop instances with a tag name you enter under the Lambda Environment Variable STOP_EC2_INSTANCES_WITH_TAG_NAME.  If you leave this blank, it will stop all running instances.  
+
+### To Deploy the Project ###
 - run the below on command line:
 ````bash
 ./1-create-bucket.sh  
@@ -8,19 +23,18 @@
 ./4-invoke.sh	
 ./5-cleanup.sh
 ````
+
 ### To Do ###
 - parameterized name in cloudwatch rule
-- add SNS notification when shutting down
+- add SNS notification when shutting down instances
     - add parameter to lambda function
 - refactor java
 - remove calls to account name, etc
 - update unit tests
-- place in code commit?
+- place in code commit
 
 ### Completed ###
-- add rule to cf template 
-
-
+- add cw rule to cf template 
 
 # Blank function (Java)
 

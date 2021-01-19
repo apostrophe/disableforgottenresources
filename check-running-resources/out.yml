@@ -1,11 +1,16 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: An AWS Lambda application that calls the Lambda API.
+Globals:
+  Function:
+    Environment:
+      Variables:
+        STOP_EC2_INSTANCES_WITH_TAG: ''
 Resources:
   LambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://disable-running-resources--java-artifacts/61559895acdc61a028f45201313a81c3
+      CodeUri: s3://disable-running-resources--java-artifacts/9986065a6c18827344d1b289e6488049
       Handler: example.Handler::handleRequest
       Runtime: java8
       Description: Java function
@@ -18,12 +23,22 @@ Resources:
       - AWSLambdaVPCAccessExecutionRole
       - AmazonEC2FullAccess
       Tracing: Active
+      EventInvokeConfig:
+        DestinationConfig:
+          OnSuccess:
+            Type: SNS
+            Destination:
+              Ref: SnsTopic
+          OnFailure:
+            Type: SNS
+            Destination:
+              Ref: SnsTopic
   ScheduledRule:
     Type: AWS::Events::Rule
     Properties:
       Description: To fire off the disable-running-resources lambda function
       Name: disable-running-resources-lambda-schedule
-      ScheduleExpression: cron(0 8 * * ? *)
+      ScheduleExpression: rate(5 minutes)
       State: ENABLED
       Targets:
       - Arn:
@@ -41,3 +56,12 @@ Resources:
         Ref: LambdaFunction
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
+  SnsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: disable-running-resources-lambda-notification
+      Subscription:
+      - Endpoint: 12673942015
+        Protocol: SMS
+      - Endpoint: '{{resolve:ssm:/personal-info/email-address:1}}'
+        Protocol: Email
