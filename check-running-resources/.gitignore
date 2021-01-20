@@ -6,6 +6,8 @@
 # Compiled class file
 *.class
 
+target/
+
 # Log file
 *.log
 
@@ -26,8 +28,6 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
-
-#!! ERROR: mvn is undefined. Use list command to see defined gitignore types !!#
 
 ### Gradle ###
 .gradle
@@ -50,9 +50,10 @@ gradle-app.setting
 
 # End of https://www.toptal.com/developers/gitignore/api/java,mvn,gradle
 
+# project
 bucket-name.txt
-aws-sample-java-apps
 
 #eclipse
 .classpath
 .project
+

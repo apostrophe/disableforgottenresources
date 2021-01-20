@@ -1,5 +1,10 @@
 ## Disable EC2 Instances ##
-This project creates a scheduled event via a CloudWatch Rule and a lambda function via a SAM-based CloudFormation template.
+In order to stay within the free tier of new  developement/test accounts this project will shutdown EC2 Instances overnight.
+
+You can specify a tag name in the lambda env variables that the lambda require before shutting down.  (If you leave it blank, it will shutdown all running instances in the current region.)
+
+template-mvn.yml creates a scheduled event via (CloudWatch Rules) and a Lambda function that will shutdown any running EC2 instances overnight.  
+via a SAM-based CloudFormation template.
 
 The Rule is scheduled to call a lambda function every night at 3AM EST to check for any running EC2 instances.
 
@@ -12,7 +17,16 @@ The Rule is scheduled to call a lambda function every night at 3AM EST to check 
       Name: disable-running-resources-lambda-schedule
       ScheduleExpression: cron(0 8 * * ? *)
 ````
+
+Change ScheduleExpression to below for testing:
+
+      ScheduleExpression: rate(5 minutes)
+
 The lambda function will only stop instances with a tag name you enter under the Lambda Environment Variable STOP_EC2_INSTANCES_WITH_TAG_NAME.  If you leave this blank, it will stop all running instances.  
+
+This project is based on AWS's [basic java sample application](https://github.com/awsdocs/aws-lambda-developer-guide/tree/master/sample-apps/blank-java).
+
+
 
 ### To Deploy the Project ###
 - run the below on command line:
@@ -25,7 +39,6 @@ The lambda function will only stop instances with a tag name you enter under the
 ````
 
 ### To Do ###
-- parameterized name in cloudwatch rule
 - add SNS notification when shutting down instances
     - add parameter to lambda function
 - refactor java
@@ -33,19 +46,15 @@ The lambda function will only stop instances with a tag name you enter under the
 - update unit tests
 - place in code commit
 
-### Completed ###
-- add cw rule to cf template 
+# Disable Running Resources
 
-# Blank function (Java)
-
-![Architecture](/sample-apps/blank-java/images/sample-blank-java.png)
+![Architecture](images/arch-diagram.png)
 
 The project source includes function code and supporting resources:
 
 - `src/main` - A Java function.
 - `src/test` - A unit test and helper classes.
-- `template.yml` - An AWS CloudFormation template that creates an application.
-- `build.gradle` - A Gradle build file.
+- `template-mvn.yml` - An AWS CloudFormation template that creates an application.
 - `pom.xml` - A Maven build file.
 - `1-create-bucket.sh`, `2-build-layer.sh`, etc. - Shell scripts that use the AWS CLI to deploy and manage the application.
 
