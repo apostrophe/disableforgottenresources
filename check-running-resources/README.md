@@ -18,9 +18,19 @@ The Rule is scheduled to call a lambda function every night at 3AM EST to check 
       ScheduleExpression: cron(0 8 * * ? *)
 ````
 
-Change ScheduleExpression to below for testing:
+Change CloudWatchRuleScheduleExpression to below for testing:
 
-      ScheduleExpression: rate(5 minutes)
+Parameters:
+  CloudWatchRuleScheduleExpression:
+    Type: String
+    Default: "cron(0 8 * * ? *)"
+
+NOTE: Currently there's an override in 3-deploy.sh:
+
+    ````
+    aws cloudformation deploy --template-file out.yml --stack-name disable-running-resources --parameter-overrides CloudWatchRuleScheduleExpression="rate(5 minutes)" --capabilities CAPABILITY_NAMED_IAM 
+    ````
+
 
 The lambda function will only stop instances with a tag name you enter under the Lambda Environment Variable STOP_EC2_INSTANCES_WITH_TAG_NAME.  If you leave this blank, it will stop all running instances.  
 
@@ -38,13 +48,44 @@ This project is based on AWS's [basic java sample application](https://github.co
 ./5-cleanup.sh
 ````
 
+````bash
+# to save some terminal space, run:
+./2-build-layer.sh | tail && ./3-deploy.sh
+
+### Misc ###
+````bash
+# start an instance
+aws ec2 start-instances --instance-ids {instance id(s)}
+
+# display status of instances
+aws ec2 describe-instances --query "Reservations[*].Instances[*].{Instance:InstanceId,AZ:Placement.AvailabilityZone,Name:Tags[?Key=='Name']|[0].Value,State:State.Name,Reason:StateTransitionReason}" --output table
+
+# in another window 'tail' cloudwatch:
+aws logs tail --since 5m --follow {log group name}
+
+
+
 ### To Do ###
 - add SNS notification when shutting down instances
     - add parameter to lambda function
-- refactor java
-- remove calls to account name, etc
 - update unit tests
 - place in code commit
+- remove phone number & email address from template-mvn.yml and out.yml (if tracking)
+- clean up logging
+    - can you suppress x-ray logging?
+
+
+### In Progress ###
+
+### Done ###
+- refactor java
+- make rule/schedule a parameter and override it in cf cli command
+- remove out.yml from git
+- is CloudWatchRuleScheduleExpression getting configured correctly?
+    - is it set up correctly in cf template?
+- remove calls to account name, etc in lambda
+- troubleshoot text messaging (not receiving)
+
 
 # Disable Running Resources
 

@@ -1,10 +1,10 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 Description: An AWS Lambda application that calls the Lambda API.
-# Parameters:
-#   LambdaArn:
-#     Type: String
-#     Description: Provide the ARN of the Lambda Function the CloudWatch Rule will create
+Parameters:
+  CloudWatchRuleScheduleExpression:
+    Type: String
+    Default: "cron(0 8 * * ? *)"
 Globals:
   Function:
     Environment:
@@ -24,7 +24,7 @@ Resources:
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSLambdaReadOnlyAccess
-        - AWSXrayWriteOnlyAccess
+        # - AWSXrayWriteOnlyAccess
         - AWSLambdaVPCAccessExecutionRole
         - AmazonEC2FullAccess
       Tracing: Active
@@ -41,8 +41,10 @@ Resources:
     Properties: 
       Description: To fire off the disable-running-resources lambda function
       Name: disable-running-resources-lambda-schedule
-      ScheduleExpression: cron(0 8 * * ? *)
+      # ScheduleExpression: cron(0 8 * * ? *)
       # ScheduleExpression: rate(5 minutes)
+      ScheduleExpression: 
+        Ref: CloudWatchRuleScheduleExpression
       State: ENABLED
       Targets: 
         - Arn: 

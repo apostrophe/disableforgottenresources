@@ -48,114 +48,115 @@ public class Handler implements RequestHandler<SQSEvent, String>{
 	@Override
 	public String handleRequest(SQSEvent event, Context context)
 	{
+		// logger.info("ENVIRONMENT VARIABLES: {}", gson.toJson(System.getenv()));
+		// logger.info("CONTEXT: {}", gson.toJson(context));
+		// logger.info("EVENT: {}", gson.toJson(event));
 
-		describeEc2Instances(context);
-
+		disableEc2Instances(context);
 
 		String response = new String();
-		// call Lambda API
-		logger.info("Getting account settings");
-		CompletableFuture<GetAccountSettingsResponse> accountSettings = 
-				lambdaClient.getAccountSettings(GetAccountSettingsRequest.builder().build());
-		// log execution details
-		logger.info("ENVIRONMENT VARIABLES: {}", gson.toJson(System.getenv()));
-		logger.info("CONTEXT: {}", gson.toJson(context));
-		logger.info("EVENT: {}", gson.toJson(event));
-		// process event
-//		if (event != null) {
-//			for(SQSMessage msg : event.getRecords()){
-//				logger.info("~"+msg.getBody());
-//			}
-//		}
-		// process Lambda API response
-		try {
-			GetAccountSettingsResponse settings = accountSettings.get();
-			response = gson.toJson(settings.accountUsage());
-			logger.info("Account usage: {}", response);
-		} catch(Exception e) {
-			e.getStackTrace();
-		}
 		return response;
 	}
 	
-	private void describeEc2Instances(Context context) {
-    	final AmazonEC2 ec2 = AmazonEC2ClientBuilder.defaultClient();
-    	boolean done = false;
-    	
-    	DescribeInstancesRequest request = new DescribeInstancesRequest();
+	private void disableEc2Instances(Context context) {		
+		String currentMethodName = new Object(){}.getClass().getEnclosingMethod().getName();
+		context.getLogger().log("--- "+currentMethodName+"() START ---");
+		
+		final AmazonEC2 ec2 = AmazonEC2ClientBuilder.standard()
+	             //.withRegion("us-west-2")
+				.build();
+		
+		DescribeInstancesRequest request = new DescribeInstancesRequest();
 		DescribeInstancesResult response = ec2.describeInstances(request);
 		
-		//if (response.getNextToken() == null)
-		//	context.getLogger().log("No instances running!");
-		
-		out("--- RESOURCE START ---", context);
-		
-    	while (!done) {
+		List<Reservation> reservations = response.getReservations();
 
-    		for(Reservation reservation : response.getReservations()) {
-    			for(Instance instance : reservation.getInstances()) {
+		if (reservations.isEmpty()) {
+			context.getLogger().log("There are no instances running in this region");
+			return;
+		}
 
-					boolean instanceWithMatchingTagFound = false;
+		// check all ec2 instances in the region..
+		for(Reservation reservation : reservations) {
 
-    				context.getLogger().log(String.format(
-    						"Instance %s, " + 
-    						"AMI: %s, " + 
-    						"type: %s, " + 
-    						"state: %s, ",
-    						instance.getInstanceId(),
-    						instance.getImageId(),
-    						instance.getInstanceType(),
-    						instance.getState()
-    						));
+			List<Instance> instances = reservation.getInstances();
 
+			boolean instanceWithMatchingTagFound = false;
+
+			for(Instance instance : instances) {
+
+				context.getLogger().log(String.format(
+						"Instance %s, " + 
+						"AMI: %s, " + 
+						"type: %s, " + 
+						"state: %s, " +
+						"tags: %s, ",
+						instance.getInstanceId(),
+						instance.getImageId(),
+						instance.getInstanceType(),
+						instance.getState(),
+						instance.getTags().toString()
+						));
+				
+				// skip instances that aren't in the running state
+				if (!instance.getState().getName().equalsIgnoreCase("RUNNING")) {
+					context.getLogger().log(String.format("Instance %s is not running (state: %s)", instance.getInstanceId(), instance.getState()));
+					continue;
+				}
+
+				// extract reserved tag from lambda 
 				final String EC2_MARKER_TAG = System.getenv("STOP_EC2_INSTANCES_TAG_NAME");
-				context.getLogger().log("*** STOP_EC2_INSTANCES_TAG_NAME " + EC2_MARKER_TAG + " ***");
+				context.getLogger().log("lambda's tag STOP_EC2_INSTANCES_TAG_NAME: " + EC2_MARKER_TAG);
 
+				// if there's no lambda tag value defined...
 				if (EC2_MARKER_TAG == null || EC2_MARKER_TAG.trim().isEmpty()) {
-					context.getLogger().log("*** STOP_EC2_INSTANCES_TAG_NAME IS EMPTY ***");
 
+					// ...stop all running instances
 					StopInstancesRequest stopRequest = new StopInstancesRequest().withInstanceIds(instance.getInstanceId());
 					ec2.stopInstances(stopRequest);
 
 					context.getLogger().log("*** request made to STOP instance " + instance.getInstanceId() + " ***");
 				}
 				else {
-					context.getLogger().log("*** STOP_EC2_INSTANCES_TAG_NAME IS NOT EMPTY: "+EC2_MARKER_TAG+" ***");
+					// otherwise there must be a tag value defined
 
+					context.getLogger().log("*** STOP_EC2_INSTANCES_TAG_NAME IS NOT EMPTY: "+EC2_MARKER_TAG+" ***");
 					context.getLogger().log("instance.getState().getName()"+instance.getState().getName());
 
-    				List<Tag> tags = instance.getTags();
-    				for (Tag tag : tags) {
+					// get the tags from each instance
+					List<Tag> tags = instance.getTags();
+					for (Tag tag : tags) {
+						// if any of the instance tags match the lambda tag, stop it
 						if (tag.getKey().equalsIgnoreCase(EC2_MARKER_TAG) && instance.getState().getName().equalsIgnoreCase("running")) {
 							context.getLogger().log("*** EC2 TAG FOUND:  "+tag.getKey()+" ***");
-    	
+		
 							StopInstancesRequest stopRequest = new StopInstancesRequest().withInstanceIds(instance.getInstanceId());
-    						ec2.stopInstances(stopRequest);
-    						
-    						context.getLogger().log("*** request made to STOP instance " + instance.getInstanceId() + " ***");
+							ec2.stopInstances(stopRequest);
+							
+							context.getLogger().log("*** request made to STOP instance " + instance.getInstanceId() + " ***");
 							instanceWithMatchingTagFound = true;
 
-    						// add SNS notification
+							// add SNS notification
 						}
-    				}
+					}
 
 					if (!instanceWithMatchingTagFound)
 						context.getLogger().log("*** No tags found matching " + EC2_MARKER_TAG + " on instance id " + instance.getInstanceId() + " ***");
-    			}
 				}
+			}
 
-    		}
-    		
-    		request.setNextToken(response.getNextToken());
-    		if (response.getNextToken() == null) done = true;
-    	}
-    	
-		out("--- RESOURCE END ---", context);
+		}
+		
+		// request.setNextToken(instances.getNextToken());
+		// if (instances.getNextToken() == null) 
+		// 	done = true;
+		
+		context.getLogger().log("--- "+currentMethodName+"() END ---");
 		
 	}
 	
 	private void out(String inString, Context context) {
-		System.out.println(inString);
+		context.getLogger().log(inString);
 		context.getLogger().log(inString);
 	}
 }
