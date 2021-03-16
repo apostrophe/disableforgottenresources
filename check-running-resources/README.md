@@ -66,11 +66,11 @@ aws logs tail --since 5m --follow {log group name}
 
 
 ### To Do ###
+- how to remove 
 - add SNS notification when shutting down instances
     - add parameter to lambda function
 - update unit tests
 - place in code commit
-- remove phone number & email address from template-mvn.yml and out.yml (if tracking)
 - clean up logging
     - can you suppress x-ray logging?
 
@@ -85,6 +85,7 @@ aws logs tail --since 5m --follow {log group name}
     - is it set up correctly in cf template?
 - remove calls to account name, etc in lambda
 - troubleshoot text messaging (not receiving)
+- remove phone number & email address from template-mvn.yml and out.yml (if tracking)
 
 
 # Disable Running Resources

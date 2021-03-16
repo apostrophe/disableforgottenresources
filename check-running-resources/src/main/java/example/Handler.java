@@ -63,7 +63,6 @@ public class Handler implements RequestHandler<SQSEvent, String>{
 		context.getLogger().log("--- "+currentMethodName+"() START ---");
 		
 		final AmazonEC2 ec2 = AmazonEC2ClientBuilder.standard()
-	             //.withRegion("us-west-2")
 				.build();
 		
 		DescribeInstancesRequest request = new DescribeInstancesRequest();
